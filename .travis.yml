@@ -1,0 +1,30 @@
+sudo: required
+
+services:
+  - docker
+
+  env:
+  global:
+    - SHA=$(git rev-parse --short HEAD)
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
+
+before_install:
+  - openssl aes-256-cbc -K $encrypted_3e2565127fdb_key -iv $encrypted_3e2565127fdb_iv -in multi-k8s-service-account.json.enc -out multi-k8s-service-account.json -d
+  - curl https://sdk.cloud.google.com | bash > /dev/null;
+  - source $HOME/google-cloud-sdk/path.pash.inc
+  - gcloud components update kubectl
+  - gcloud auth activate-service-account --key-file multi-k8s-service-account.json
+  - gcloud config set project multi-k8s-303501
+  - gcloud config set compute/zone us-west2-c
+  - gcloud container clusters get-credentials multi-cluster
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker build -t mcrawford/multi-client -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mcrawford/multi-client npm test
+
+deploy:
+  provider: script
+  script: bash ./deploy.sh
+  on:
+    branch: master
