@@ -1,17 +1,14 @@
 sudo: required
-
 services:
   - docker
-
-  env:
+env:
   global:
     - SHA=$(git rev-parse --short HEAD)
     - CLOUDSDK_CORE_DISABLE_PROMPTS=1
-
 before_install:
   - openssl aes-256-cbc -K $encrypted_3e2565127fdb_key -iv $encrypted_3e2565127fdb_iv -in multi-k8s-service-account.json.enc -out multi-k8s-service-account.json -d
   - curl https://sdk.cloud.google.com | bash > /dev/null;
-  - source $HOME/google-cloud-sdk/path.pash.inc
+  - source $HOME/google-cloud-sdk/path.bash.inc
   - gcloud components update kubectl
   - gcloud auth activate-service-account --key-file multi-k8s-service-account.json
   - gcloud config set project multi-k8s-303501
